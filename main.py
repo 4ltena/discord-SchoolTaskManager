@@ -758,6 +758,22 @@ async def cmd_reboot(interaction: discord.Interaction):
     sys.exit(0)
 
 
+# ── /admin-comment ────────────────────────────────────────────────────────────
+
+@bot.tree.command(name="admin-comment", description="管理者からのお知らせを送信する (管理者専用)")
+@app_commands.describe(message="送信するメッセージ")
+async def cmd_admin_comment(interaction: discord.Interaction, message: str):
+    if interaction.user.id not in ADMIN_IDS:
+        await interaction.response.send_message(
+            f"```\nadmin-comment: {interaction.user.name}: permission denied\n```",
+            ephemeral=True,
+        )
+        return
+    await interaction.response.send_message(
+        f"```\n[admin: {interaction.user.display_name}]\n{message}\n```"
+    )
+
+
 # ── /man ──────────────────────────────────────────────────────────────────────
 
 @bot.tree.command(name="man", description="マニュアルを表示する")
@@ -785,6 +801,8 @@ async def cmd_man(interaction: discord.Interaction):
         "        レイテンシ確認。\n"
         "    /reboot\n"
         "        管理者用再起動。\n"
+        "    /admin-comment <message>\n"
+        "        管理者からのお知らせをチャンネルに送信する。\n"
         "\n"
         "DATE FORMATS\n"
         "    今日/today, 明日/tomorrow, 明後日, M/D, M月D日, YYYY-MM-DD\n"

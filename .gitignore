@@ -1,0 +1,7 @@
+.env
+credential.json
+__pycache__/
+*.py[cod]
+id_map.json
+.claude/
+CLAUDE.md

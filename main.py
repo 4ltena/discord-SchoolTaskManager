@@ -47,7 +47,6 @@ CHANNEL_ID   = int(os.getenv("DISCORD_CHANNEL_ID")) if os.getenv("DISCORD_CHANNE
 ADMIN_IDS    = {int(i) for i in os.getenv("DISCORD_ADMIN_IDS", "").split(",") if i.strip()}
 
 _SUBJECTS_PATH = os.path.join(os.path.dirname(__file__), "subjects.json")
-_SETTINGS_PATH = os.path.join(os.path.dirname(__file__), "settings.json")
 _ID_MAP_PATH   = os.path.join(os.path.dirname(__file__), "id_map.json")
 
 bot       = make_bot()
@@ -82,13 +81,7 @@ def _release_id(event_id: str) -> None:
 
 # ── Settings ──────────────────────────────────────────────────────────────────
 
-def _load_settings() -> dict:
-    with open(_SETTINGS_PATH, encoding="utf-8") as f:
-        return json.load(f)
-
-def _save_settings(data: dict) -> None:
-    with open(_SETTINGS_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+_notify_lead: str = os.getenv("NOTIFY_LEAD", "1d")
 
 
 # ── Subjects ──────────────────────────────────────────────────────────────────
@@ -250,7 +243,7 @@ async def _send_notify(event_id: str) -> None:
 
 def _schedule_notify(event: dict) -> None:
     """Schedule a notification job for the given event based on current settings."""
-    lead = _parse_lead(_load_settings().get("notify_lead"))
+    lead = _parse_lead(_notify_lead)
     if lead is None:
         return
     fire = _notify_at(event, lead)
@@ -275,7 +268,7 @@ def _cancel_notify(event_id: str) -> None:
 
 def _reschedule_all() -> None:
     """Fetch all future tasks and reschedule notifications from scratch."""
-    lead = _parse_lead(_load_settings().get("notify_lead"))
+    lead = _parse_lead(_notify_lead)
     # Cancel all existing notify jobs
     for job in scheduler.get_jobs():
         if job.id.startswith("notify_"):
@@ -709,22 +702,19 @@ class SettingsGroup(app_commands.Group, name="settings", description="Bot設定�
         interaction: discord.Interaction,
         timing: app_commands.Choice[str] | None = None,
     ):
-        s = _load_settings()
+        global _notify_lead
 
         if timing is None:
-            current = s.get("notify_lead") or "off"
             await interaction.response.send_message(
-                f"```\nnotify_lead : {current}\n```", ephemeral=True
+                f"```\nnotify_lead : {_notify_lead}\n```", ephemeral=True
             )
             return
 
-        s["notify_lead"] = timing.value if timing.value != "off" else None
-        _save_settings(s)
+        _notify_lead = timing.value
         _reschedule_all()
 
-        display = timing.value if timing.value != "off" else "off"
         await interaction.response.send_message(
-            f"```\nnotify_lead : {display}  (全課題の通知を再スケジュールしました)\n```",
+            f"```\nnotify_lead : {_notify_lead}  (全課題の通知を再スケジュールしました)\n```",
             ephemeral=True,
         )
 

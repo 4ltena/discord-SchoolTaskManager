@@ -3,5 +3,7 @@ credential.json
 __pycache__/
 *.py[cod]
 id_map.json
+subjects.json
+settings.json
 .claude/
 CLAUDE.md

@@ -6,5 +6,4 @@ services:
       - .env
     volumes:
       - ./id_map.json:/app/id_map.json
-      - ./settings.json:/app/settings.json
       - ./subjects.json:/app/subjects.json
